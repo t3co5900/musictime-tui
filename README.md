@@ -11,6 +11,8 @@ Dashboard de terminal para controlar Spotify: playlists, búsqueda, fila, letras
 
 ## Instalación
 
+> **¿Primera vez con la terminal, Git o Python?** Seguí la **[guía paso a paso](docs/INSTALACION.md)**: explica todo, incluida la creación de tu app de Spotify, para Windows, Ubuntu/Linux y macOS. Abajo va la versión resumida.
+
 **macOS / Linux**
 ```bash
 git clone https://github.com/t3co5900/musictime-tui.git
@@ -23,9 +25,9 @@ En Debian/Ubuntu puede hacer falta `sudo apt install python3-venv`. Si `~/.local
 ```powershell
 git clone https://github.com/t3co5900/musictime-tui.git
 cd musictime-tui
-.\install.ps1
+powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
-Abrí una terminal nueva para que reconozca el comando `musictime`. Si PowerShell bloquea el script: `powershell -ExecutionPolicy Bypass -File .\install.ps1`.
+Abrí una terminal nueva para que reconozca el comando `musictime`. (`-ExecutionPolicy Bypass` evita el bloqueo de scripts de Windows solo para esta ejecución.)
 
 **Cualquier sistema, con pipx**
 ```bash
