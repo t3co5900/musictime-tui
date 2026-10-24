@@ -106,7 +106,7 @@ El instalador crea un entorno virtual propio, instala las dependencias, deja el 
    ```
 4. Corré `musictime login` y aceptá en el navegador.
 
-Detalle con capturas de cada campo en la [guía de instalación](INSTALLATION.md#2-crear-tu-app-de-spotify-y-sacar-el-client-id).
+Detalle de cada campo en la [guía de instalación](INSTALLATION.md#2-crear-tu-app-de-spotify-y-sacar-el-client-id).
 
 ## Uso
 
