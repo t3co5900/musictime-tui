@@ -84,7 +84,13 @@ Para scripts: `musictime taste` (tus artistas más frecuentes) y `musictime queu
 - Si el dashboard dice que no hay dispositivo activo, abrí Spotify y poné cualquier tema una vez.
 
 ## Compatibilidad
-Desarrollado y probado a mano en **macOS**. El código usa solo Python estándar, [Textual](https://textual.textualize.io) y [Pillow](https://python-pillow.org), que funcionan en Linux y Windows; las pruebas automáticas corren en Linux, macOS y Windows con GitHub Actions (mirá la pestaña *Actions*). Lo que no se probó a mano en Linux ni Windows es el aspecto real en cada terminal y los instaladores en máquinas reales: si algo falla, abrí un *issue* con el mensaje de error.
+| Sistema | Estado |
+|---|---|
+| **macOS** | Probado a mano. |
+| **Windows 10/11** | Probado a mano con el instalador `install.ps1` y la [guía paso a paso](docs/INSTALACION.md): instala, hace login y se ve bien en Windows Terminal. |
+| **Linux (Ubuntu/Debian y otras)** | Las pruebas automáticas pasan, pero **todavía nadie lo probó a mano en una máquina real**. Si lo probás, contanos cómo te fue en un *issue*. |
+
+El código usa solo Python estándar, [Textual](https://textual.textualize.io) y [Pillow](https://python-pillow.org), que funcionan en los tres sistemas. Las pruebas automáticas corren en Linux, macOS y Windows con GitHub Actions (pestaña *Actions*). La apariencia depende de que tu terminal soporte colores reales.
 
 ## Desarrollo
 ```bash

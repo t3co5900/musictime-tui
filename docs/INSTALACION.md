@@ -48,7 +48,7 @@ Esta guía está pensada para alguien que **nunca usó la terminal ni Git**. Cad
 
 ## 3a. Windows
 
-Probado en Windows 10 y 11 (las pruebas automáticas pasan en Windows; el instalador está menos probado: si algo falla, mirá [Problemas comunes](#5-problemas-comunes)).
+Probado a mano en Windows con estos mismos pasos. Si algo falla, mirá [Problemas comunes](#5-problemas-comunes).
 
 ### Paso 1: abrir una terminal
 - **Windows 11:** apretá la tecla Windows, escribí **Terminal** y abrí *Terminal* (o *Windows Terminal*).
