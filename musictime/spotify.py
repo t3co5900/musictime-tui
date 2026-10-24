@@ -195,20 +195,33 @@ def can_browse(playlist):
 
 
 def playlists():
-    return api("GET", "/me/playlists", query={"limit": 50})["items"]
-
-
-def playlist_tracks(playlist_id):
-    try:
-        data = api("GET", f"/playlists/{playlist_id}/tracks", query={"limit": 100})
-    except SpotifyError:
-        data = api("GET", f"/playlists/{playlist_id}/items", query={"limit": 100})
     out = []
-    for it in data["items"]:
-        t = it.get("track") or it.get("item")
-        if t and t.get("uri", "").startswith("spotify:track:"):
-            out.append(t)
-    return out
+    while True:
+        data = api("GET", "/me/playlists", query={"limit": 50, "offset": len(out)})
+        out += data["items"]
+        if not data["items"] or not data.get("next"):
+            return out
+
+
+def playlist_tracks(playlist_id, max_items=None):
+    """Temas de una playlist, paginando de a 100 hasta el final (o hasta `max_items` si se indica)."""
+    out, offset, path = [], 0, f"/playlists/{playlist_id}/tracks"
+    while True:
+        query = {"limit": 100, "offset": offset}
+        try:
+            data = api("GET", path, query=query)
+        except SpotifyError:
+            if offset:
+                raise
+            path = f"/playlists/{playlist_id}/items"
+            data = api("GET", path, query=query)
+        for it in data["items"]:
+            t = it.get("track") or it.get("item")
+            if t and t.get("uri", "").startswith("spotify:track:"):
+                out.append(t)
+        offset += len(data["items"])
+        if not data["items"] or not data.get("next") or (max_items and len(out) >= max_items):
+            return out[:max_items] if max_items else out
 
 
 def liked_tracks(limit=50):
@@ -230,7 +243,7 @@ def taste(limit=250):
     me = me_id()
     for pl in [p for p in playlists() if p["owner"]["id"] == me][:6]:
         try:
-            en_listas.update(t["artists"][0]["name"] for t in playlist_tracks(pl["id"])[:60] if t.get("artists"))
+            en_listas.update(t["artists"][0]["name"] for t in playlist_tracks(pl["id"], 60) if t.get("artists"))
         except SpotifyError:
             pass
     return {"guardadas": guardadas.most_common(20), "playlists": en_listas.most_common(15),
