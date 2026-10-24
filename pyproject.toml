@@ -1,0 +1,16 @@
+[project]
+name = "musictime"
+version = "0.1.0"
+description = "Dashboard de terminal para controlar Spotify"
+requires-python = ">=3.10"
+dependencies = ["textual>=0.80", "pillow>=10"]
+
+[project.scripts]
+musictime = "musictime.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["musictime"]
