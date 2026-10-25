@@ -30,11 +30,19 @@ def _read(path):
         return None
 
 
+PLACEHOLDER = "PEGA_AQUI_TU_CLIENT_ID"  # lo deja el instalador hasta que el usuario pegue el suyo
+
+
 def client_id():
-    cfg = _read(CONFIG) or {}
-    if not cfg.get("client_id"):
-        raise SpotifyError(f'Falta client_id en {CONFIG} ({{"client_id": "..."}})')
-    return cfg["client_id"]
+    try:
+        cfg = _read(CONFIG) or {}
+    except ValueError:
+        raise SpotifyError(f"{CONFIG} no es un JSON válido. Debe verse así: " + '{"client_id": "..."}')
+    cid = str(cfg.get("client_id") or "").strip()
+    if not cid or cid == PLACEHOLDER:
+        raise SpotifyError(f'Falta tu Client ID en {CONFIG} ({{"client_id": "..."}}). '
+                           "Cómo conseguirlo: INSTALLATION.md, sección 2.")
+    return cid
 
 
 def is_logged_in():

@@ -89,6 +89,7 @@ def main():
         if a.cmd == "login":
             sp.login(); return print("Login guardado.")
         if a.cmd is None:
+            sp.client_id()  # avisa primero si falta configurar, antes que pedir el login
             if not sp.is_logged_in():
                 sys.exit("Primero iniciá sesión: musictime login")
             from .tui import MusicTime

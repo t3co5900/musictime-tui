@@ -22,6 +22,16 @@ fi
 
 case ":$PATH:" in
   *":$BIN:"*) ;;
-  *) echo "Agregá $BIN al PATH (zsh): echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.zshrc" ;;
+  *)
+    case "$(basename "${SHELL:-}")" in
+      zsh)  RC="~/.zshrc" ;;
+      bash) if [ "$(uname)" = "Darwin" ]; then RC="~/.bash_profile"; else RC="~/.bashrc"; fi ;;
+      *)    RC="" ;;
+    esac
+    if [ -n "$RC" ]; then
+      echo "Agregá $BIN al PATH y abrí una terminal nueva: echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> $RC"
+    else
+      echo "Agregá $BIN al PATH de tu shell (archivo de inicio, por ejemplo ~/.profile): export PATH=\"\$HOME/.local/bin:\$PATH\""
+    fi ;;
 esac
 echo "Listo. Primera vez: musictime login. Después: musictime"
