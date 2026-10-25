@@ -1,4 +1,6 @@
-# Guía de instalación paso a paso
+# Guía de instalación de musictime
+
+> Volver al [README](README.md) · Tiempo estimado: 10 a 15 minutos · Sistemas: Windows 10/11, Ubuntu/Debian y otras distribuciones de Linux, macOS
 
 Esta guía está pensada para alguien que **nunca usó la terminal ni Git**. Cada paso explica qué se hace y para qué. Seguila en orden:
 
@@ -229,7 +231,7 @@ Los mismos pasos en todos los sistemas, ya con el Client ID guardado:
    ```
    musictime
    ```
-   Arranca mostrando tus playlists. Las teclas principales: **flechas** para moverte, **Enter** para abrir o reproducir, **espacio** para pausa, **/** para buscar, **y** para ver la letra, **c** para ver la portada grande, **q** para salir. La tabla completa está en el [README](../README.md#uso).
+   Arranca mostrando tus playlists. Las teclas principales: **flechas** para moverte, **Enter** para abrir o reproducir, **espacio** para pausa, **/** para buscar, **y** para ver la letra, **c** para ver la portada grande, **q** para salir. La tabla completa está en el [README](README.md#uso).
 
 ---
 
