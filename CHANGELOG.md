@@ -4,6 +4,13 @@ Todos los cambios relevantes de este proyecto se documentan acá. El formato sig
 
 ## [Sin publicar]
 
+### Cambiado
+- Portada a pantalla completa en modo ASCII con más detalle: rampa de 66 caracteres ordenados por densidad (antes 10), autocontraste, realce de color y celdas oscuras vacías. Inspirado en [ascii-now-playing](https://github.com/SebaAq/ascii-now-playing).
+- Animación al cambiar de tema más fluida: 30 cuadros por segundo (antes 20), curvas suaves, apagado gradual de la portada vieja y subida con borde difuso de la nueva.
+
+### Corregido
+- La portada ya no sale estirada hacia arriba: la proporción de las celdas se mide en píxeles con la terminal (si no la informa, se usa 2:1). Todas las portadas quedan cuadradas y del mismo tamaño.
+
 ### Agregado
 - Tecla `o`: ordena los temas de una playlist o de Guardadas por artista (A-Z, Z-A) o vuelve al orden original. Solo cambia la vista; la playlist en Spotify no se modifica.
 

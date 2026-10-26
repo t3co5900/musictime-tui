@@ -43,7 +43,7 @@ Tiene dos modos de uso:
 - **Búsqueda** de temas con paginación automática.
 - **Control de reproducción:** play/pausa, siguiente/anterior, volumen, shuffle, repeat y cambio de dispositivo.
 - **Letras sincronizadas** a pantalla completa: la línea que suena brilla en dorado y las demás se apagan con la distancia.
-- **Portada a pantalla completa** en medios bloques (más detalle) o ASCII, con animación al cambiar de tema.
+- **Portada a pantalla completa** cuadrada en medios bloques o ASCII (rampa de 66 niveles), con animación suave al cambiar de tema.
 - **Modo scriptable:** `taste` resume tus artistas más frecuentes y `queue-list` arma la fila a partir de textos `"Tema - Artista"`, descartando versiones en vivo, remix o karaoke no pedidas.
 - **Sin dependencias pesadas:** el cliente de Spotify usa solo la librería estándar de Python; el resto es Textual y Pillow.
 - **Multiplataforma:** instaladores para macOS, Linux y Windows, con pruebas automáticas en los tres.
