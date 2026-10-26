@@ -4,6 +4,10 @@ Todos los cambios relevantes de este proyecto se documentan acá. El formato sig
 
 ## [Sin publicar]
 
+## [0.1.3] - 2026-10-26
+
+Verificación: 30 pruebas automáticas pasan; la portada (ASCII, animación y forma cuadrada) se probó a mano en macOS con iTerm2.
+
 ### Cambiado
 - Portada a pantalla completa en modo ASCII con más detalle: rampa de 66 caracteres ordenados por densidad (antes 10), autocontraste, realce de color y celdas oscuras vacías. Inspirado en [ascii-now-playing](https://github.com/SebaAq/ascii-now-playing).
 - Animación al cambiar de tema más fluida: 30 cuadros por segundo (antes 20), curvas suaves, apagado gradual de la portada vieja y subida con borde difuso de la nueva.
