@@ -2,6 +2,11 @@
 
 Todos los cambios relevantes de este proyecto se documentan acá. El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/) y el proyecto usa [versionado semántico](https://semver.org/lang/es/).
 
+## [Sin publicar]
+
+### Agregado
+- Tecla `o`: ordena los temas de una playlist o de Guardadas por artista (A-Z, Z-A) o vuelve al orden original. Solo cambia la vista; la playlist en Spotify no se modifica.
+
 ## [0.1.2] - 2026-10-24
 
 ### Corregido

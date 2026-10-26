@@ -125,6 +125,7 @@ Con Spotify abierto en algún dispositivo, corré `musictime`. Arranca mostrando
 | `a` | agregar el tema seleccionado a la fila |
 | `l` | tus playlists |
 | `m` | tus canciones guardadas |
+| `o` | cambia el orden de los temas de una playlist o de Guardadas: original → artista A-Z → artista Z-A (solo la vista, no modifica la playlist en Spotify) |
 | `f` | la fila |
 | `d` | dispositivos (Enter pasa la música ahí) |
 | `y` | letra sincronizada a pantalla completa |

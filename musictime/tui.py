@@ -166,6 +166,7 @@ class MusicTime(App):
         Binding("f", "show_queue", "Fila"),
         Binding("d", "show_devices", "Equipos"),
         Binding("a", "enqueue", "+Fila"),
+        Binding("o", "sort", "Orden"),
         Binding("q", "quit", "Salir"),
     ]
 
@@ -179,6 +180,8 @@ class MusicTime(App):
         self.context_uri = None
         self.playlist_uris = {}
         self.playlist_browsable = {}
+        self.source_tracks = []  # temas de la lista abierta, en el orden de Spotify
+        self.sort_i = 0
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -281,6 +284,24 @@ class MusicTime(App):
         self.tracks = dict(keyed)
         return [(k, (x["name"], sp.artists(x), x["album"]["name"], sp.fmt_ms(x["duration_ms"]))) for k, x in keyed]
 
+    def sorted_tracks(self):
+        _, reverse = SORTS[self.sort_i]
+        if reverse is None:
+            return list(self.source_tracks)
+        return sorted(self.source_tracks, key=lambda x: sp.artists(x).casefold(), reverse=reverse)
+
+    def sort_title(self, mode):
+        base = ("Playlist (Enter reproduce · l vuelve a tus playlists" if mode == "playlist_tracks"
+                else "Mis canciones (Enter reproduce")
+        return f"{base} · o cambia el orden) — orden: {SORTS[self.sort_i][0]}"
+
+    def action_sort(self):
+        if self.mode not in ("playlist_tracks", "liked"):
+            return self.notify("El orden por artista funciona dentro de una playlist o en Guardadas.")
+        self.sort_i = (self.sort_i + 1) % len(SORTS)
+        self.fill(self.mode, self.sort_title(self.mode), ("Tema", "Artista", "Álbum", "Dur"),
+                  self.track_rows(self.sorted_tracks(), self.mode))
+
     @work(thread=True, exclusive=True, group="table")
     def load(self, mode, arg=None):
         cols = ("Tema", "Artista", "Álbum", "Dur")
@@ -299,10 +320,11 @@ class MusicTime(App):
                         ("Playlist", "Temas", "De", ""), rows)
             elif mode == "playlist_tracks":
                 self.context_uri = self.playlist_uris.get(arg)
-                args = ("playlist_tracks", "Playlist (Enter reproduce · l vuelve a tus playlists)", cols,
-                        self.track_rows(sp.playlist_tracks(arg), mode))
+                self.source_tracks, self.sort_i = sp.playlist_tracks(arg), 0
+                args = ("playlist_tracks", self.sort_title(mode), cols, self.track_rows(self.sorted_tracks(), mode))
             elif mode == "liked":
-                args = ("liked", "Mis canciones (Enter reproduce)", cols, self.track_rows(sp.liked_tracks(), mode))
+                self.source_tracks, self.sort_i = sp.liked_tracks(), 0
+                args = ("liked", self.sort_title(mode), cols, self.track_rows(self.sorted_tracks(), mode))
             else:
                 rows = [(d["id"], (("● " if d["is_active"] else "") + d["name"], d["type"], f"{d['volume_percent']}%"))
                         for d in sp.devices()]
@@ -370,6 +392,9 @@ class MusicTime(App):
             self.cmd(sp.add_to_queue, self.tracks[key]["uri"])
             self.notify("Agregado a la fila")
 
+
+# Órdenes de la lista de temas: (nombre, reverse); None conserva el orden de Spotify.
+SORTS = [("original", None), ("artista A-Z", False), ("artista Z-A", True)]
 
 # Gradiente de la letra según la distancia a la línea actual.
 HALO = [None, AZUL, "#7f9fd0", "#5b7099", GRIS_OSCURO]

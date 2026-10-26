@@ -307,3 +307,30 @@ def test_pick_best_acepta_acentos_y_artistas_en_colaboracion():
 def test_pick_best_pide_remix_si_el_titulo_lo_dice():
     items = [_res("Tema Dos (Remix)", "Banda"), _res("Tema Dos", "Banda")]
     assert sp.pick_best(items, "Tema Dos (Remix)", "Banda")["name"] == "Tema Dos (Remix)"
+
+
+def test_orden_por_artista(monkeypatch):
+    def tema(n, artista):
+        return {**TRACK, "name": n, "uri": f"spotify:track:{n}", "artists": [{"name": artista}]}
+    temas = [tema("a", "Zeta"), tema("b", "alfa"), tema("c", "Mono")]
+    monkeypatch.setattr(sp, "me_id", lambda: "yo")
+    monkeypatch.setattr(sp, "playback", lambda: STATE)
+    monkeypatch.setattr(sp, "playlists", lambda: [])
+    monkeypatch.setattr(sp, "playlist_tracks", lambda pid: temas)
+
+    async def run():
+        app = MusicTime()
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.pause(0.3)
+            app.load("playlist_tracks", "pl1")
+            await pilot.pause(0.5)
+            artistas = lambda: [c[1] for c in app.rows.values()]
+            assert artistas() == ["Zeta", "alfa", "Mono"]
+            await pilot.press("o")
+            assert artistas() == ["alfa", "Mono", "Zeta"]
+            await pilot.press("o")
+            assert artistas() == ["Zeta", "Mono", "alfa"]
+            await pilot.press("o")
+            assert artistas() == ["Zeta", "alfa", "Mono"]
+
+    asyncio.run(run())
