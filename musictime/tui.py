@@ -1,5 +1,5 @@
 """Dashboard de terminal: la música suena en la app de Spotify, acá se manda todo."""
-import time
+import fcntl, struct, termios, time
 
 from textual import work
 from textual.app import App, ComposeResult
@@ -51,6 +51,12 @@ def _mezcla(c, k):
     return "rgb(%d,%d,%d)" % tuple(int(f + (v - f) * k) for v, f in zip(c, FONDO))
 
 
+def _suave(x):
+    """Curva de aceleración suave (arranca y frena despacio) para x en [0, 1]."""
+    x = min(1.0, max(0.0, x))
+    return x * x * (3 - 2 * x)
+
+
 def _ruido(x, y):
     """Número fijo en [0, 1) por celda: decide en qué orden se deshace la portada."""
     return ((x * 73856093) ^ (y * 19349663)) % 1000 / 1000
@@ -59,8 +65,8 @@ def _ruido(x, y):
 class CoverView(Static):
     """Portada ASCII en color: la vieja se disuelve y la nueva sube desde abajo."""
 
-    SALIDA = 0.8   # segundos que tarda en deshacerse
-    ENTRADA = 1.1  # segundos que tarda en subir la nueva
+    SALIDA = 0.7   # segundos que tarda en deshacerse
+    ENTRADA = 1.4  # segundos que tarda en subir la nueva
 
     def __init__(self, **kw):
         super().__init__("", **kw)
@@ -111,21 +117,22 @@ class CoverView(Static):
         if not g:
             return out
         alto = len(g)
-        frente = (self.t / self.ENTRADA) * (alto + 3) if self.fase == "entrada" else None
-        p = min(1.0, self.t / self.SALIDA) if self.fase == "salida" else 0.0
+        u = _suave(self.t / self.SALIDA) if self.fase == "salida" else _suave(self.t / self.ENTRADA)
         for y, fila in enumerate(g):
             if y:
                 out.append("\n")
             for x, (ch, c, *resto) in enumerate(fila):
                 fondo = resto[0] if resto else None
                 if self.fase == "salida":
-                    k = None if _ruido(x, y) < p else 1 - 0.7 * p
-                elif frente is not None:
-                    d = frente - (alto - 1 - y)  # cuánto pasó el frente por esta fila (de abajo hacia arriba)
-                    k = None if d <= 0 else min(1.0, d / 3)
+                    # cada celda se apaga a su ritmo (según su ruido) y se funde con el fondo, sin cortes bruscos
+                    k = 1 - _suave((u - _ruido(x, y) * 0.6) / 0.4)
+                elif self.fase == "entrada":
+                    # el frente sube desde abajo con un borde ancho y difuso; el ruido lo despareja un poco
+                    retraso = (alto - 1 - y) / alto * 0.65 + _ruido(x, y) * 0.15
+                    k = _suave((u * 1.35 - retraso) / 0.35)
                 else:
                     k = 1.0
-                if k is None:
+                if k <= 0.02:
                     out.append(" ")
                 else:
                     estilo = _mezcla(c, k) + (f" on {_mezcla(fondo, k)}" if fondo else "")
@@ -476,6 +483,18 @@ class LyricsScreen(Screen):
         body.update("\n".join(out))
 
 
+def _proporcion_celda():
+    """Alto / ancho de una celda de la terminal, medido en píxeles (2.0 si la terminal no los informa)."""
+    for fd in (0, 1, 2):
+        try:
+            filas, cols, ancho, alto = struct.unpack("HHHH", fcntl.ioctl(fd, termios.TIOCGWINSZ, b"\0" * 8))
+        except (OSError, struct.error):
+            continue
+        if filas and cols and ancho and alto:
+            return min(3.0, max(1.2, (alto / filas) / (ancho / cols)))
+    return 2.0
+
+
 class CoverScreen(Screen):
     """Portada a pantalla completa, lo más grande posible, con la misma animación de cambio de tema."""
 
@@ -493,6 +512,7 @@ class CoverScreen(Screen):
         self.album = None
         self.modo = "bloques"
         self.medidas = (0, 0)
+        self.celda = _proporcion_celda()
 
     def compose(self) -> ComposeResult:
         yield CoverView(id="c-cover")
@@ -501,16 +521,16 @@ class CoverScreen(Screen):
 
     def on_mount(self):
         self.ajustar()
-        self.set_interval(1 / 20, self.paso)
+        self.set_interval(1 / 30, self.paso)
 
     def ajustar(self):
-        """Tamaño máximo cuadrado: las celdas son ~2 veces más altas que anchas."""
+        """Tamaño máximo cuadrado según la proporción real de las celdas (medida en píxeles)."""
         ancho, alto = self.size
         filas = max(4, alto - 7)
-        cols = filas * 2
+        cols = round(filas * self.celda)
         if cols > ancho - 4:
-            cols = max(8, (ancho - 4) // 2 * 2)
-            filas = cols // 2
+            cols = max(8, ancho - 4)
+            filas = max(4, round(cols / self.celda))
         vista = self.query_one("#c-cover", CoverView)
         vista.styles.height = filas  # el ancho es 100% y la portada se centra con content-align
         if (cols, filas) != self.medidas:
@@ -535,7 +555,7 @@ class CoverScreen(Screen):
 
     def paso(self):
         vista = self.query_one("#c-cover", CoverView)
-        vista.avanzar(1 / 20)
+        vista.avanzar(1 / 30)
         st = self.app.state
         item = st.get("item") if st else None
         album = item["album"] if item else None

@@ -1,10 +1,13 @@
 """Portada del álbum convertida a ASCII en color (con caché local)."""
 import hashlib, io, os, urllib.request
 
-from PIL import Image, ImageEnhance
+from PIL import Image, ImageEnhance, ImageOps
 
 CACHE_DIR = os.path.expanduser("~/.cache/musictime/covers")
-RAMP = " .:-=+*#%@"  # de oscuro a claro: más denso = más brillante
+# de oscuro a claro: más denso = más brillante (66 niveles, misma idea que ascii-now-playing)
+RAMP = " .'`^\",:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
+MIN_LUM = 0.12  # en modo ASCII las celdas más oscuras que esto quedan vacías (el fondo hace de sombra)
+GAIN = 1.3      # realce de color en modo ASCII: el texto fino se ve más apagado que un bloque lleno
 UA = "musictime/0.1 (https://github.com/t3co5900/musictime-tui)"
 
 
@@ -52,7 +55,10 @@ def to_grid(img, cols, rows, modo="bloques"):
     modo "ascii": un carácter por celda según el brillo. Las celdas son ~2 veces más altas que anchas.
     """
     alto_px = rows * 2 if modo == "bloques" else rows
-    im = ImageEnhance.Color(img.convert("RGB").resize((cols, alto_px), Image.LANCZOS)).enhance(1.35)
+    im = img.convert("RGB").resize((cols, alto_px), Image.LANCZOS)
+    if modo != "bloques":
+        im = ImageOps.autocontrast(im, cutoff=1)  # aprovecha toda la rampa aunque la tapa sea oscura o lavada
+    im = ImageEnhance.Color(im).enhance(1.35)
     px = im.load()
     grid = []
     for y in range(rows):
@@ -63,7 +69,11 @@ def to_grid(img, cols, rows, modo="bloques"):
             else:
                 r, g, b = px[x, y]
                 lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
-                row.append((RAMP[min(len(RAMP) - 1, int(lum * len(RAMP)))], _vivo((r, g, b)), None))
+                if lum < MIN_LUM:
+                    row.append((" ", (0, 0, 0), None))
+                    continue
+                color = _vivo(tuple(min(255, int(v * GAIN)) for v in (r, g, b)))
+                row.append((RAMP[min(len(RAMP) - 1, int(lum * len(RAMP)))], color, None))
         grid.append(row)
     return grid
 
