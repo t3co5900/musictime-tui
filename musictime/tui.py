@@ -2,6 +2,7 @@
 import fcntl, struct, termios, time
 
 from textual import work
+from textual.worker import get_current_worker
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from rich.text import Text
@@ -406,6 +407,7 @@ SORTS = [("original", None), ("artista A-Z", False), ("artista Z-A", True)]
 # Gradiente de la letra según la distancia a la línea actual.
 HALO = [None, AZUL, "#7f9fd0", "#5b7099", GRIS_OSCURO]
 LEAD_MS = 250  # adelanto para compensar la latencia de la API
+REINTENTOS = (1, 3, 6)  # segundos entre intentos si LRCLIB falla
 
 
 class LyricsScreen(Screen):
@@ -423,6 +425,7 @@ class LyricsScreen(Screen):
         super().__init__()
         self.uri = None
         self.data = None  # None: cargando
+        self.aviso = None  # mensaje mientras se reintenta
 
     def compose(self) -> ComposeResult:
         yield Static("", id="l-head")
@@ -434,11 +437,24 @@ class LyricsScreen(Screen):
 
     @work(thread=True, exclusive=True)
     def cargar(self, track):
-        try:
-            data = ly.fetch(track)
-        except Exception:
-            data = {"synced": [], "plain": None, "instrumental": False}
-        self.app.call_from_thread(setattr, self, "data", data)
+        # LRCLIB a veces responde 5xx/429 o tarda: reintentar antes de rendirse
+        for espera in (*REINTENTOS, None):
+            try:
+                data = ly.fetch(track)
+                break
+            except Exception:
+                if espera is None:
+                    data = {"synced": [], "plain": None, "instrumental": False, "error": True}
+                    break
+                self.app.call_from_thread(self._mostrar, track["uri"], "aviso", "LRCLIB no responde, reintentando…")
+                time.sleep(espera)
+                if get_current_worker().is_cancelled:
+                    return
+        self.app.call_from_thread(self._mostrar, track["uri"], "data", data)
+
+    def _mostrar(self, uri, campo, valor):
+        if uri == self.uri:  # descartar resultados de un tema que ya no suena
+            setattr(self, campo, valor)
 
     def tick(self):
         st = self.app.state
@@ -447,12 +463,14 @@ class LyricsScreen(Screen):
         if not item:
             return body.update(f"[{GRIS}]Nada sonando[/]")
         if item["uri"] != self.uri:
-            self.uri, self.data = item["uri"], None
+            self.uri, self.data, self.aviso = item["uri"], None, None
             self.cargar(item)
             self.query_one("#l-head", Static).update(
                 f"[b {BLANCO}]{item['name']}[/]\n[{AZUL}]{sp.artists(item)}[/]")
         if self.data is None:
-            return body.update(f"[{GRIS}]Buscando la letra…[/]")
+            return body.update(f"[{GRIS}]{self.aviso or 'Buscando la letra…'}[/]")
+        if self.data.get("error"):
+            return body.update(f"[{GRIS}]LRCLIB no responde. Volvé a abrir la letra en un rato.[/]")
         if self.data["instrumental"]:
             return body.update(f"[{DORADO}]♪ Instrumental ♪[/]")
         lines = self.data["synced"]

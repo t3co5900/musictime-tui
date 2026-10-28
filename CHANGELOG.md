@@ -4,6 +4,20 @@ Todos los cambios relevantes de este proyecto se documentan acá. El formato sig
 
 ## [Sin publicar]
 
+## [0.1.4] - 2026-10-28
+
+Verificación: 43 pruebas automáticas pasan; la búsqueda nueva se probó contra LRCLIB real con temas remasterizados, en vivo y con varios artistas.
+
+### Corregido
+- Letras: un "no encontré" ya no queda guardado para siempre; se vuelve a buscar pasado un día (también los que ya estaban en la caché).
+- Letras: un error de red o del servidor de LRCLIB ya no se guarda como "sin letra".
+- Letras: si cambiás de tema mientras se busca, ya no aparece la letra del tema anterior.
+- `token.json` ya no se corrompe si dos procesos renuevan el token a la vez (escritura atómica y lock).
+
+### Cambiado
+- Letras: búsqueda más amplia. Si no hay coincidencia exacta, prueba el título sin agregados de Spotify ("- Remastered 2009", "(feat. X)", "- En Vivo", "- 2015 Mix"), cada artista del tema y una búsqueda libre, y prefiere la letra sincronizada.
+- Letras: si LRCLIB no responde, reintenta solo (1 s, 3 s y 6 s) mostrando "LRCLIB no responde, reintentando…", y al final lo avisa con un mensaje distinto de "No encontré la letra". Cada pedido espera como máximo 5 s (antes 10).
+
 ## [0.1.3] - 2026-10-26
 
 Verificación: 30 pruebas automáticas pasan; la portada (ASCII, animación y forma cuadrada) se probó a mano en macOS con iTerm2.
@@ -49,6 +63,8 @@ Verificación: 30 pruebas automáticas pasan; la portada (ASCII, animación y fo
 - Comandos de línea de comandos y modo scriptable (`taste`, `queue-list`).
 - Instaladores para macOS, Linux y Windows, y pruebas automáticas en los tres sistemas.
 
+[0.1.4]: https://github.com/t3co5900/musictime-tui/releases/tag/v0.1.4
+[0.1.3]: https://github.com/t3co5900/musictime-tui/releases/tag/v0.1.3
 [0.1.2]: https://github.com/t3co5900/musictime-tui/releases/tag/v0.1.2
 [0.1.1]: https://github.com/t3co5900/musictime-tui/releases/tag/v0.1.1
 [0.1.0]: https://github.com/t3co5900/musictime-tui/commits/main
