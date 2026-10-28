@@ -169,6 +169,59 @@ def test_pantalla_de_letra(monkeypatch):
     assert pantalla != "LyricsScreen"
 
 
+def test_letra_reintenta_si_lrclib_falla(monkeypatch):
+    from musictime import lyrics as ly
+    from musictime import tui
+    monkeypatch.setattr(sp, "playback", lambda: dict(STATE, progress_ms=6000))
+    monkeypatch.setattr(sp, "playlists", lambda: [])
+    monkeypatch.setattr(tui, "REINTENTOS", (0.3, 0.3))
+    intentos = []
+
+    def fetch(track):
+        intentos.append(1)
+        if len(intentos) < 3:
+            raise TimeoutError
+        return {"synced": ly.parse_lrc(LRC_PRUEBA), "plain": None, "instrumental": False}
+
+    monkeypatch.setattr(ly, "fetch", fetch)
+
+    async def run():
+        app = MusicTime()
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.pause(0.5)
+            await pilot.press("y")
+            await pilot.pause(0.2)
+            durante = str(app.screen.query_one("#l-body").render())
+            await pilot.pause(1.0)
+            return durante, str(app.screen.query_one("#l-body").render())
+
+    durante, despues = asyncio.run(run())
+    assert "reintentando" in durante
+    assert "segunda linea de prueba" in despues and len(intentos) == 3
+
+
+def test_letra_avisa_si_lrclib_no_responde(monkeypatch):
+    from musictime import lyrics as ly
+    from musictime import tui
+    monkeypatch.setattr(sp, "playback", lambda: dict(STATE, progress_ms=6000))
+    monkeypatch.setattr(sp, "playlists", lambda: [])
+    monkeypatch.setattr(tui, "REINTENTOS", (0.1,))
+
+    def caido(track):
+        raise TimeoutError
+    monkeypatch.setattr(ly, "fetch", caido)
+
+    async def run():
+        app = MusicTime()
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.pause(0.5)
+            await pilot.press("y")
+            await pilot.pause(0.8)
+            return str(app.screen.query_one("#l-body").render())
+
+    assert "LRCLIB no responde" in asyncio.run(run())
+
+
 def test_playlist_ajena_se_reproduce_completa(monkeypatch):
     jugadas, abiertas = [], []
     monkeypatch.setattr(sp, "me_id", lambda: "yo")

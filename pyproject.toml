@@ -1,6 +1,6 @@
 [project]
 name = "musictime"
-version = "0.1.3"
+version = "0.1.4"
 description = "Dashboard de terminal para controlar Spotify"
 requires-python = ">=3.10"
 dependencies = ["textual>=0.80", "pillow>=10"]
