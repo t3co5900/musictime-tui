@@ -1,5 +1,5 @@
 """Cliente mínimo de la Web API de Spotify (solo librería estándar)."""
-import base64, hashlib, http.server, json, os, secrets, time
+import base64, hashlib, http.server, json, os, secrets, threading, time
 import urllib.error, urllib.parse, urllib.request, webbrowser
 
 CONFIG_DIR = os.path.expanduser("~/.config/musictime")
@@ -11,15 +11,20 @@ SCOPES = ("user-read-playback-state user-modify-playback-state user-read-current
 API = "https://api.spotify.com/v1"
 
 
+_REFRESH_LOCK = threading.Lock()
+
+
 class SpotifyError(Exception):
     pass
 
 
 def _write_private(path, data):
     os.makedirs(CONFIG_DIR, exist_ok=True)
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    tmp = f"{path}.{os.getpid()}.{threading.get_ident()}.tmp"
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w") as f:
         json.dump(data, f)
+    os.replace(tmp, path)  # atómico: nadie lee un archivo a medio escribir
 
 
 def _read(path):
@@ -100,11 +105,14 @@ def access_token():
     if not tok:
         raise SpotifyError("No hay login. Corré: musictime login")
     if time.time() >= tok["expires_at"]:
-        new = _token_request({"grant_type": "refresh_token", "refresh_token": tok["refresh_token"],
-                              "client_id": client_id()})
-        new.setdefault("refresh_token", tok["refresh_token"])
-        _write_private(TOKEN, new)
-        tok = new
+        with _REFRESH_LOCK:  # un solo hilo refresca; los demás reusan el token nuevo
+            tok = _read(TOKEN)
+            if time.time() >= tok["expires_at"]:
+                new = _token_request({"grant_type": "refresh_token", "refresh_token": tok["refresh_token"],
+                                      "client_id": client_id()})
+                new.setdefault("refresh_token", tok["refresh_token"])
+                _write_private(TOKEN, new)
+                tok = new
     return tok["access_token"]
 
 
